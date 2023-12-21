@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "elderwatch-909f1",
+  "private_key_id": "c1a4066e6f9e4a29ed693f1254a9b787f8f65fd5",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQD3+IdAH1g4CQEn\nqXFk99G3M/QKW4iSFH7dFWhicfkJjv0mFqw2wBM3otps/bX96alcEKAhU2VxdDl5\nX+A5Q20CHvBSM8nUyzdx7wMnazWpNIBYEC2BMle2sIx+g6GQWoTmgNkxWJQpH+gA\ntmrk/uYrxTYempU4TWdpLX/v6vbzMPsE5aVQSQJs2m1q8Lf99/HnAv7kTsGFrkPA\n6iD5DDWJ0rbB/dlOH11VzgbvHcLNPETQgJ9igXX6+UvdXeXxYbym/JLQlDIhiOz4\nKYkyjbP0CTiy2KqqNl+l0YNcznrtsjmD6aSvvvs7DOwOZZQEoxEmHaZJd/IuiJ/W\ncLzgiTjHAgMBAAECggEACcf0fBTOJhhDHi+Zexe7FXbQ8UY4BlzL4tXjRGUco0s9\nq3e7VkXQSfS8T6CzwdNPB/H98CKVWiPxIUkAgY0qGIXSCaQJLB0/qv0vCryBpSTn\ny/YH+OaTYm/CxTnnjDMybYl3IyleqHYLXn2KaE1DFNjEFM0Y4ZK6VSashEyD2+I4\n6YMDUarstTWnUqjAvtjwnPHiYVX0LluLIH7KwyeBfjDU3+/0oaaVOJIedKYKb6pi\nydR2iL/aoyrkdLyin1taS1GMYN7ssYcUNNQKc65+oq8VTQoKoqHh1bGO6N2igroL\nNFoPzNk268QpCu0aECNgzbNmpYFsW081gCBw1QJHlQKBgQD+3f26hv4f5TLhwr1L\nj3b/j7JJ2CGYRbrXSj2UKYqamP1YeLXZQZ+2ZFTacJGSRUP+3swUyJ+pxSyJ5Lt2\ns7mvj3MC+tsZXQv7U1XhBeFpWRZZHbxE2UbLNKpkzXewurmwy2AI7CiSxBcH7ph5\nvlN6NumSH5JW5VAys3MwOuQgRQKBgQD5ErCh8/Ub2uVdjHqkiyPydWZDewr+evqZ\nC2Wj4gFjmUtHRw5EEJ9eXgMXheBOqlY1Nwlsd8NXzh6QyjrXelmpMF34FhOnSKGG\nyt2BAA0Tfc/snwBRzUqOc0Omq5RVzYmQPks381UvJjxetwjBVgGEZM9Na17BXH1K\n1PmB5KNjmwKBgQDlePydeDPQhe3lJRCIuthay4esQyQkVQwgEWEWSLzZ60uX379j\nqFljwDxCHT6EY0cQcItxXx2ansQ2N7Kt8q4KKu9TzId+8675D5RwMXo9/w9HF6XO\nm47JIVcVwYW1ornUO5jxD6iMVG+kHag9XScOD+kHPtPk1zz5GWdqEmwZvQKBgQCb\nuarD5zKVktubDKzVWcVE30/r2u85wowRygVnXHO/4OUnEG8D8Vyi9KZ8O5DNvkQe\nC2YR8iMpL87+eeImPPH4DSyDYtIw4gFTtFyfPffu+tdYOuVJP9BglgJzH42jw9lB\nXSFMPxBAZWiTU17e+jYCn8DYx8u7m2cetV+2bcwWBwKBgQDV0yLY1eR0CRN2JLmi\n2xeKsVTuCm1MYhrk3X/hBY43yNJ9ex1+Ao+8LHJ5SFePe7yfo+9SoWtzCTv1JOdJ\n7xt7IVtTJ2IWVqSwOs301jKgdIV5P27qn03wPZZRaCfpaUqLhAuWjnUUj9VDmMCw\nVfe7s8y9xl3X6R1+m/1BBzLJdQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-cvdgt@elderwatch-909f1.iam.gserviceaccount.com",
+  "client_id": "108165110775852144784",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-cvdgt%40elderwatch-909f1.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
