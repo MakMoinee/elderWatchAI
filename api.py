@@ -54,6 +54,10 @@ async def start_camera():
     ip = request.args.get('ip')  # Get the 'ip' parameter from the request query string
     if not ip:
         return jsonify({"message": "IP address is missing in the request parameters"}), 400
+    
+    userID = request.args.get('id')  # Get the 'ip' parameter from the request query string
+    if not userID:
+        return jsonify({"message": "id is missing in the request parameters"}), 400
 
     rtsp_url = f"rtsp://{ip}/live/ch00_0"
 
@@ -61,7 +65,7 @@ async def start_camera():
     result = await loop.run_in_executor(None, is_rtsp_accessible, rtsp_url)
 
     if result:
-        command =  f"start cmd /k \"cd /d C:\\Users\\Brian\\Documents\\elderWatchAI && activate && python data.py {ip}\""
+        command =  f"start cmd /k \"cd /d C:\\Users\\Brian\\Documents\\elderWatchAI && activate && python data.py {ip} {userID}\""
         subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ip_started[ip] = True
         return jsonify({"ip": ip, "status": "RTSP URL is accessible and working"}), 200
