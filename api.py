@@ -4,8 +4,11 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import cv2
 import asyncio
+import subprocess
 
 app = Quart(__name__)
+
+ip_started = {}
 
 # Initialize Firebase Admin SDK
 cred = credentials.Certificate('./elderwatch.json')  # Replace with your service account key file
@@ -42,6 +45,25 @@ async def ping_ip():
     result = await loop.run_in_executor(None, is_rtsp_accessible, rtsp_url)
 
     if result:
+        return jsonify({"ip": ip, "status": "RTSP URL is accessible and working"}), 200
+    else:
+        return jsonify({"ip": ip, "status": "RTSP URL may not be accessible or is not working"}), 200
+    
+@app.route("/start", methods=['GET'])
+async def start_camera():
+    ip = request.args.get('ip')  # Get the 'ip' parameter from the request query string
+    if not ip:
+        return jsonify({"message": "IP address is missing in the request parameters"}), 400
+
+    rtsp_url = f"rtsp://{ip}/live/ch00_0"
+
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, is_rtsp_accessible, rtsp_url)
+
+    if result:
+        command =  f"start cmd /k \"cd /d C:\\Users\\Brian\\Documents\\elderWatchAI && activate && python data.py {ip}\""
+        subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ip_started[ip] = True
         return jsonify({"ip": ip, "status": "RTSP URL is accessible and working"}), 200
     else:
         return jsonify({"ip": ip, "status": "RTSP URL may not be accessible or is not working"}), 200

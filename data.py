@@ -1,13 +1,18 @@
 import cv2
 import torch
-from models.devices import Devices
+# from models.devices import Devices
+import sys
 
 import firebase_admin
 from firebase_admin import credentials, firestore
 
 username = 'briansia321@gmail.com'
 password = 'Dagolmanyak321'
-ip = "192.168.1.7"
+if len(sys.argv) < 2:
+    print("Please provide the IP address as a command-line argument.")
+    sys.exit(1)
+
+ip = sys.argv[1]
 rtsp_url = f"rtsp://{ip}/live/ch00_0"
 acceptable_confidence = 0.52
 
