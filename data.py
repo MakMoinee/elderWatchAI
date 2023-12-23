@@ -1,9 +1,14 @@
 import cv2
 import torch
+from models.devices import Devices
+
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 username = 'briansia321@gmail.com'
 password = 'Dagolmanyak321'
-rtsp_url = 'rtsp://192.168.1.7/live/ch00_0'
+ip = "192.168.1.7"
+rtsp_url = f"rtsp://{ip}/live/ch00_0"
 acceptable_confidence = 0.52
 
 # Load YOLOv5 model
@@ -30,8 +35,9 @@ while stream.isOpened():
     detections = results.pandas().xyxy[0]
     for index, detection in detections.iterrows():
         if (detection['confidence'] >= acceptable_confidence):
-            # Display the frame with bounding boxes and labels
             print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
+            if "fall" in detection['name']:
+                print("hey")
     
     cv2.imshow('Real-time Detection', results.render()[0])
 
