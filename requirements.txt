@@ -1,0 +1,4 @@
+quart
+scapy
+yolov5
+firebase-admin
