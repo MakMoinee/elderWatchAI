@@ -4,7 +4,7 @@ from devices import Devices
 import sys
 
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, messaging
 
 username = 'briansia321@gmail.com'
 password = 'Dagolmanyak321'
@@ -21,6 +21,16 @@ acceptable_confidence = 0.52
 cred = credentials.Certificate('./elderwatch.json')  # Replace with your service account key file
 firebase_admin.initialize_app(cred)
 db = firestore.client()
+
+
+registration_token = "c-GoAsJBSgyPJJCJynbuCp:APA91bFl5vQSCuQFWcG0tAqosJan1UUX28ecM1QCLFFtZdeyTbH6pXxW-OVV991tUqbgZyJCOCe_S8xo97VjJgwRZviBcB53w3mJ9v7MuNeqtuz_4lM7JH8iOfe3lCG0qiUhgKIN4uJs"
+message = messaging.Message(
+    notification=messaging.Notification(
+        title='ElderWatch',
+        body='sample'
+    ),
+    token=registration_token,
+)
 
 # Load YOLOv5 model
 def load_model(weights_path):
@@ -49,6 +59,7 @@ updateOnce = False
 model.eval()
 
 stream = cv2.VideoCapture(rtsp_url)
+detectedCount = 0
 
 while stream.isOpened():
     ret, frame = stream.read()
@@ -71,7 +82,12 @@ while stream.isOpened():
         if (detection['confidence'] >= acceptable_confidence):
             print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
             if "fall" in detection['name']:
-                print("hey")
+                detectedCount = detectedCount + 1
+            if (detectedCount==500):
+                print("reached the desired detected count")
+                res = messaging.send(message)
+                print('Successfully sent message:', res)
+                detectedCount=0
     
     cv2.imshow('Real-time Detection', results.render()[0])
 
