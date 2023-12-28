@@ -2,6 +2,7 @@ import cv2
 import torch
 from devices import Devices
 import sys
+from datetime import datetime
 
 import firebase_admin
 from firebase_admin import credentials, firestore, messaging
@@ -22,14 +23,14 @@ cred = credentials.Certificate('./elderwatch.json')  # Replace with your service
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 token_ref = db.collection('tokens')
-queryToken = token_ref.where('userID','==',userID)
+queryToken = token_ref.where(field_path='userID', op_string='==', value=userID)
 listOfTokens = [doc.to_dict() for doc in queryToken.get()] 
 
 registration_token = listOfTokens[0]['deviceToken']
 message = messaging.Message(
     notification=messaging.Notification(
         title='ElderWatch',
-        body='sample'
+        body='Patient Might Be In Danger, Please Review By Clicking Here'
     ),
     token=registration_token,
 )
@@ -52,6 +53,36 @@ def updateStatus(user_id,ip,status):
         doc.reference.update({'status': status})
         
     return err
+
+def save_image_with_boxes(frame, detections):
+    detected_objects = []
+    for index, detection in detections.iterrows():
+        if detection['confidence'] >= acceptable_confidence:
+            box = [
+                int(detection['xmin']),
+                int(detection['ymin']),
+                int(detection['xmax']),
+                int(detection['ymax'])
+            ]
+            # Draw bounding box on the frame
+            cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+            cv2.putText(frame, f"{detection['name']} {detection['confidence']:.2f}",
+                        (box[0], box[1] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+            detected_objects.append({
+                'name': detection['name'],
+                'confidence': detection['confidence'],
+                'bbox': box
+            })
+
+    if detected_objects:
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        image_name = f"detected_{timestamp}.jpg"
+        cv2.imwrite(f"./gallery/{image_name}", frame)
+        return image_name, detected_objects
+
+    return None, None
 
 # Initialize the model
 model_path = "./best.pt"  # Replace this with the path to your custom YOLOv5 .pt file
@@ -87,10 +118,11 @@ try:
                 print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
                 if "fall" in detection['name']:
                     detectedCount += 1
-                if (detectedCount == 100):
+                if (detectedCount == 20):
                     print("Reached the desired detected count")
                     res = messaging.send(message)
                     print('Successfully sent message:', res)
+                    save_image_with_boxes(frame,detections)
                     detectedCount = 0
         
         cv2.imshow('Real-time Detection', results.render()[0])
