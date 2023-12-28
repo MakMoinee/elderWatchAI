@@ -162,3 +162,4 @@ Scripts/
 share/
 pyvenv.cfg
 pyvenv.*
+gallery/

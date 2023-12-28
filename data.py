@@ -54,6 +54,19 @@ def updateStatus(user_id,ip,status):
         
     return err
 
+def save_activity_history(image_name):
+    print("Saving activity history ...")
+    activityHistory = {}
+    activityHistory['caregiverID'] = userID
+    activityHistory['ip'] = ip
+    activityHistory['imagePath'] = f"./gallery/{image_name}"
+    activityHistory['createdAt'] = datetime.now().strftime("%Y%m%d%H%M")
+    activityHistory['status'] = "Unread"
+    ref = db.collection('activity_history')
+    ref.add(activityHistory)
+    print("Successfully saved activity history")
+    
+
 def save_image_with_boxes(frame, detections):
     detected_objects = []
     for index, detection in detections.iterrows():
@@ -116,14 +129,15 @@ try:
         for index, detection in detections.iterrows():
             if (detection['confidence'] >= acceptable_confidence):
                 print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
-                if "fall" in detection['name']:
+                if "sitting" in detection['name']:
                     detectedCount += 1
                 if (detectedCount == 20):
                     print("Reached the desired detected count")
                     res = messaging.send(message)
                     print('Successfully sent message:', res)
-                    save_image_with_boxes(frame,detections)
+                    im,s = save_image_with_boxes(frame,detections)
                     detectedCount = 0
+                    save_activity_history(im)
         
         cv2.imshow('Real-time Detection', results.render()[0])
 

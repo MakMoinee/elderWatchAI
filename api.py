@@ -1,4 +1,4 @@
-from quart import Quart, jsonify, request
+from quart import Quart, jsonify, request,send_from_directory
 from scapy.all import *
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -71,6 +71,10 @@ async def start_camera():
         return jsonify({"ip": ip, "status": "RTSP URL is accessible and working"}), 200
     else:
         return jsonify({"ip": ip, "status": "RTSP URL may not be accessible or is not working"}), 200
+
+@app.route('/gallery/<path:filename>', methods=['GET'])
+async def get_gallery_image(filename):
+    return await send_from_directory('./gallery', filename)
 
 
 if __name__ == '__main__':
