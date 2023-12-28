@@ -21,9 +21,11 @@ acceptable_confidence = 0.52
 cred = credentials.Certificate('./elderwatch.json')  # Replace with your service account key file
 firebase_admin.initialize_app(cred)
 db = firestore.client()
+token_ref = db.collection('tokens')
+queryToken = token_ref.where('userID','==',userID)
+listOfTokens = [doc.to_dict() for doc in queryToken.get()] 
 
-
-registration_token = "c-GoAsJBSgyPJJCJynbuCp:APA91bFl5vQSCuQFWcG0tAqosJan1UUX28ecM1QCLFFtZdeyTbH6pXxW-OVV991tUqbgZyJCOCe_S8xo97VjJgwRZviBcB53w3mJ9v7MuNeqtuz_4lM7JH8iOfe3lCG0qiUhgKIN4uJs"
+registration_token = listOfTokens[0]['deviceToken']
 message = messaging.Message(
     notification=messaging.Notification(
         title='ElderWatch',
@@ -61,40 +63,50 @@ model.eval()
 stream = cv2.VideoCapture(rtsp_url)
 detectedCount = 0
 
-while stream.isOpened():
-    ret, frame = stream.read()
-    if not ret:
-        break
+try:
+    while stream.isOpened():
+        ret, frame = stream.read()
+        if not ret:
+            break
 
-    
-    if (updateOnce is not True):
-        updateOnce = True
-        print("Updating Device Status")
-        err = updateStatus(userID,ip,'Active')
-        if 'error' in err and err['error'] != "":
-            stream.release()
-            cv2.destroyAllWindows()
-            sys.exit()
-    # Perform inference
-    results = model(frame)
-    detections = results.pandas().xyxy[0]
-    for index, detection in detections.iterrows():
-        if (detection['confidence'] >= acceptable_confidence):
-            print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
-            if "fall" in detection['name']:
-                detectedCount = detectedCount + 1
-            if (detectedCount==500):
-                print("reached the desired detected count")
-                res = messaging.send(message)
-                print('Successfully sent message:', res)
-                detectedCount=0
-    
-    cv2.imshow('Real-time Detection', results.render()[0])
+        if (updateOnce is not True):
+            updateOnce = True
+            print("Updating Device Status")
+            err = updateStatus(userID, ip, 'Active')
+            if 'error' in err and err['error'] != "":
+                stream.release()
+                cv2.destroyAllWindows()
+                sys.exit()
+        
+        # Perform inference
+        results = model(frame)
+        detections = results.pandas().xyxy[0]
+        
+        for index, detection in detections.iterrows():
+            if (detection['confidence'] >= acceptable_confidence):
+                print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
+                if "fall" in detection['name']:
+                    detectedCount += 1
+                if (detectedCount == 100):
+                    print("Reached the desired detected count")
+                    res = messaging.send(message)
+                    print('Successfully sent message:', res)
+                    detectedCount = 0
+        
+        cv2.imshow('Real-time Detection', results.render()[0])
 
-    if cv2.waitKey(1) == ord('q'):
-        break
+        if cv2.waitKey(1) == ord('q'):
+            break
 
-# Release resources
-updateStatus(userID,ip,"Inactive")
-stream.release()
-cv2.destroyAllWindows()
+except cv2.error as e:
+    print(f"OpenCV error: {e}")
+except KeyboardInterrupt:
+    print("Keyboard Interrupt detected. Exiting...")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+finally:
+    # Release resources
+    updateStatus(userID,ip,"Inactive")
+    stream.release()
+    cv2.destroyAllWindows()
+
