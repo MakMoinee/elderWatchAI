@@ -90,7 +90,7 @@ def save_image_with_boxes(frame, detections):
             })
 
     if detected_objects:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         image_name = f"detected_{timestamp}.jpg"
         cv2.imwrite(f"./gallery/{image_name}", frame)
         return image_name, detected_objects
@@ -131,7 +131,7 @@ try:
                 print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
                 if "fall" in detection['name']:
                     detectedCount += 1
-                if (detectedCount == 10):
+                if (detectedCount == 100):
                     print("Reached the desired detected count")
                     res = messaging.send(message)
                     print('Successfully sent message:', res)
