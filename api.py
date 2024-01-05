@@ -5,6 +5,7 @@ from firebase_admin import credentials, firestore
 import cv2
 import asyncio
 import subprocess
+import socket  # Import the socket library
 
 app = Quart(__name__)
 
@@ -24,6 +25,17 @@ def is_rtsp_accessible(rtsp_url):
     except Exception as e:
         print(f"Error: {e}")
     return False
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception as e:
+        print(f"Error getting local IP: {e}")
+        return None
 
 # Endpoint to retrieve users
 @app.route('/users', methods=['GET'])
@@ -78,5 +90,8 @@ async def get_gallery_image(filename):
 
 
 if __name__ == '__main__':
-    app.run(host="192.168.1.9",debug=True)
-    # app.run(host="192.168.120.220",debug=True)
+    local_ip = get_local_ip()  # Get the local IP address dynamically
+    if local_ip:
+        app.run(host=local_ip, debug=True)
+    else:
+        print("Failed to retrieve local IP address.")
