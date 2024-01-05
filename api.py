@@ -79,3 +79,4 @@ async def get_gallery_image(filename):
 
 if __name__ == '__main__':
     app.run(host="192.168.1.9",debug=True)
+    # app.run(host="192.168.120.220",debug=True)

@@ -60,7 +60,7 @@ def save_activity_history(image_name):
     activityHistory['caregiverID'] = userID
     activityHistory['ip'] = ip
     activityHistory['imagePath'] = f"./gallery/{image_name}"
-    activityHistory['createdAt'] = datetime.now().strftime("%Y%m%d%H%M")
+    activityHistory['createdAt'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     activityHistory['status'] = "Unread"
     ref = db.collection('activity_history')
     ref.add(activityHistory)
@@ -78,10 +78,10 @@ def save_image_with_boxes(frame, detections):
                 int(detection['ymax'])
             ]
             # Draw bounding box on the frame
-            cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+            cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
             cv2.putText(frame, f"{detection['name']} {detection['confidence']:.2f}",
                         (box[0], box[1] - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
             detected_objects.append({
                 'name': detection['name'],
@@ -90,7 +90,7 @@ def save_image_with_boxes(frame, detections):
             })
 
     if detected_objects:
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         image_name = f"detected_{timestamp}.jpg"
         cv2.imwrite(f"./gallery/{image_name}", frame)
         return image_name, detected_objects
@@ -129,9 +129,9 @@ try:
         for index, detection in detections.iterrows():
             if (detection['confidence'] >= acceptable_confidence):
                 print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
-                if "sitting" in detection['name']:
+                if "fall" in detection['name']:
                     detectedCount += 1
-                if (detectedCount == 20):
+                if (detectedCount == 10):
                     print("Reached the desired detected count")
                     res = messaging.send(message)
                     print('Successfully sent message:', res)
