@@ -7,6 +7,8 @@ from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore, messaging
 
+from flask import Flask, Response
+
 username = 'briansia321@gmail.com'
 password = 'Dagolmanyak321'
 if len(sys.argv) < 3:
@@ -27,13 +29,46 @@ queryToken = token_ref.where(field_path='userID', op_string='==', value=userID)
 listOfTokens = [doc.to_dict() for doc in queryToken.get()] 
 
 registration_token = listOfTokens[0]['deviceToken']
-message = messaging.Message(
-    notification=messaging.Notification(
-        title='ElderWatch',
-        body='Patient Might Be In Danger, Please Review By Clicking Here'
-    ),
-    token=registration_token,
-)
+
+
+
+## parent token
+pg_ref = db.collection("patient_guardian")
+pgQuery = pg_ref.where('caregiverID', '==', userID).where('ip', '==', ip)
+pgResults = [doc.to_dict() for doc in pgQuery.get()] 
+parentTokens = []
+if len(pgResults)>0:
+    token_ref = db.collection('tokens')
+    parentQueryToken = token_ref.where('userIDMap','==',pgResults[0]['userID'])
+    parentTokens = [doc.to_dict() for doc in parentQueryToken.get()] 
+
+print(listOfTokens)
+
+def manual_trigger():
+    print("Starting manual trigger of notif")
+    for tk in listOfTokens:
+        message = messaging.Message(
+            notification=messaging.Notification(
+            title='ElderWatch',
+            body='Patient Might Be In Danger, Please Review By Clicking Here'
+            ),
+            token=tk['deviceToken'],
+        )
+        res = messaging.send(message)
+        print('Successfully sent message:', res)
+    
+    for pTk in parentTokens:
+        message = messaging.Message(
+            notification=messaging.Notification(
+            title='ElderWatch',
+            body='Patient Might Be In Danger, Please Review By Clicking Here'
+            ),
+            token=pTk['deviceToken'],
+        )
+        res = messaging.send(message)
+        print('Successfully sent message:', res)
+    exit()
+    
 
 # Load YOLOv5 model
 def load_model(weights_path):
@@ -133,8 +168,28 @@ try:
                     detectedCount += 1
                 if (detectedCount == 100):
                     print("Reached the desired detected count")
-                    res = messaging.send(message)
-                    print('Successfully sent message:', res)
+                    for tk in listOfTokens:
+                        message = messaging.Message(
+                            notification=messaging.Notification(
+                                title='ElderWatch',
+                                body='Patient Might Be In Danger, Please Review By Clicking Here'
+                            ),
+                            token=tk['deviceToken'],
+                        )
+                        res = messaging.send(message)
+                        print('Successfully sent message:', res)
+                    
+                    for pTk in parentTokens:
+                        message = messaging.Message(
+                            notification=messaging.Notification(
+                                title='ElderWatch',
+                                body='Patient Might Be In Danger, Please Review By Clicking Here'
+                            ),
+                            token=pTk['deviceToken'],
+                        )
+                        res = messaging.send(message)
+                        print('Successfully sent message:', res)
+                    
                     im,s = save_image_with_boxes(frame,detections)
                     detectedCount = 0
                     save_activity_history(im)
