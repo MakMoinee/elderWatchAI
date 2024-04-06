@@ -1,10 +1,9 @@
 import cv2
 from flask import Flask, Response
 import threading
-from devices import Devices
-import sys
 from datetime import datetime
-
+import torch
+import sys
 import firebase_admin
 from firebase_admin import credentials, firestore, messaging
 
@@ -30,13 +29,46 @@ queryToken = token_ref.where(field_path='userID', op_string='==', value=userID)
 listOfTokens = [doc.to_dict() for doc in queryToken.get()] 
 
 registration_token = listOfTokens[0]['deviceToken']
-message = messaging.Message(
-    notification=messaging.Notification(
-        title='ElderWatch',
-        body='Patient Might Be In Danger, Please Review By Clicking Here'
-    ),
-    token=registration_token,
-)
+
+
+
+## parent token
+pg_ref = db.collection("patient_guardian")
+pgQuery = pg_ref.where('caregiverID', '==', userID).where('ip', '==', ip)
+pgResults = [doc.to_dict() for doc in pgQuery.get()] 
+parentTokens = []
+if len(pgResults)>0:
+    token_ref = db.collection('tokens')
+    parentQueryToken = token_ref.where('userIDMap','==',pgResults[0]['userID'])
+    parentTokens = [doc.to_dict() for doc in parentQueryToken.get()] 
+
+print(listOfTokens)
+
+def manual_trigger():
+    print("Starting manual trigger of notif")
+    for tk in listOfTokens:
+        message = messaging.Message(
+            notification=messaging.Notification(
+            title='ElderWatch',
+            body='Patient Might Be In Danger, Please Review By Clicking Here'
+            ),
+            token=tk['deviceToken'],
+        )
+        res = messaging.send(message)
+        print('Successfully sent message:', res)
+    
+    for pTk in parentTokens:
+        message = messaging.Message(
+            notification=messaging.Notification(
+            title='ElderWatch',
+            body='Patient Might Be In Danger, Please Review By Clicking Here'
+            ),
+            token=pTk['deviceToken'],
+        )
+        res = messaging.send(message)
+        print('Successfully sent message:', res)
+    exit()
+    
 
 # Load YOLOv5 model
 def load_model(weights_path):
@@ -106,9 +138,10 @@ model = load_model(model_path)
 updateOnce = False
 # Set the model to evaluation mode
 model.eval()
+processed_frame = None
+stop_stream = False
 
-stream = cv2.VideoCapture(rtsp_url)
-detectedCount = 0
+showVideo = False
 
 def generate_frames():
     global processed_frame
@@ -119,68 +152,115 @@ def generate_frames():
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            
+@app.route('/stop_stream', methods=['GET'])
+def stop_video_stream():
+    global stop_stream
+    stop_stream = True
+    return 'Stopping video stream...'
+
+@app.route('/show', methods=['GET'])
+def show_video_stream():
+    global showVideo
+    showVideo = True
+    return 'opening it..'
 
 @app.route('/video_feed')
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def run_flask_app():
-    app.run(host='0.0.0.0', debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5051, debug=True, use_reloader=False)
 
 def real_time_detection():
     global processed_frame
-    # Your while loop for real-time detection with YOLOv5 model
-    # This part needs to be integrated with your YOLOv5 detection logic
+    updateOnce = False
 
-    while True:
-        ret, frame = stream.read()
-        if not ret:
-            break
+    stream = cv2.VideoCapture(rtsp_url)
+    detectedCount = 0
 
-        # Perform inference and processing on the frame
-        # Update processed_frame with the annotated frame
+    # Replace this section with your YOLOv5 model loading and initialization
+    # Initialize your model, set it to evaluation mode, etc.
 
-        # Example: processed_frame = annotated_frame
-        # Replace 'annotated_frame' with your processed frame
+    try:
+        while True:
+            ret, frame = stream.read()
+            if not ret or stop_stream:
+                break
 
-        # Ensure processed_frame is updated with the processed frame
+            # Perform inference and processing on the frame
+            # Update processed_frame with the annotated frame
+            # Example: processed_frame = annotated_frame
 
-        if (updateOnce is not True):
-            updateOnce = True
-            print("Updating Device Status")
-            err = updateStatus(userID, ip, 'Active')
-            if 'error' in err and err['error'] != "":
-                stream.release()
-                cv2.destroyAllWindows()
-                sys.exit()
-        
-        # Perform inference
-        results = model(frame)
-        detections = results.pandas().xyxy[0]
-        
-        for index, detection in detections.iterrows():
-            if (detection['confidence'] >= acceptable_confidence):
-                print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
-                if "fall" in detection['name']:
-                    detectedCount += 1
-                if (detectedCount == 100):
-                    print("Reached the desired detected count")
-                    res = messaging.send(message)
-                    print('Successfully sent message:', res)
-                    im,s = save_image_with_boxes(frame,detections)
-                    detectedCount = 0
-                    save_activity_history(im)
-        
-        cv2.imshow('Real-time Detection', results.render()[0])
+            if (updateOnce is not True):
+                updateOnce = True
+                print("Updating Device Status")
+                err = updateStatus(userID, ip, 'Active')
+                if 'error' in err and err['error'] != "":
+                    stream.release()
+                    cv2.destroyAllWindows()
+                    sys.exit()
+            
+                # Perform inference
+                results = model(frame)
+                detections = results.pandas().xyxy[0]
+                
+                for index, detection in detections.iterrows():
+                    if (detection['confidence'] >= acceptable_confidence):
+                        print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
+                        if "fall" in detection['name']:
+                            detectedCount += 1
+                        if (detectedCount == 100):
+                            print("Reached the desired detected count")
+                            for tk in listOfTokens:
+                                message = messaging.Message(
+                                    notification=messaging.Notification(
+                                        title='ElderWatch',
+                                        body='Patient Might Be In Danger, Please Review By Clicking Here'
+                                    ),
+                                    token=tk['deviceToken'],
+                                )
+                                res = messaging.send(message)
+                                print('Successfully sent message:', res)
+                            
+                            for pTk in parentTokens:
+                                message = messaging.Message(
+                                    notification=messaging.Notification(
+                                        title='ElderWatch',
+                                        body='Patient Might Be In Danger, Please Review By Clicking Here'
+                                    ),
+                                    token=pTk['deviceToken'],
+                                )
+                                res = messaging.send(message)
+                                print('Successfully sent message:', res)
+                            
+                            im,s = save_image_with_boxes(frame,detections)
+                            detectedCount = 0
+                            save_activity_history(im)
+                if showVideo:
+                    cv2.imshow('Real-time Detection', results.render()[0])
 
-        if cv2.waitKey(1) == ord('q'):
-            break
+                    # Update processed_frame with the processed frame for Flask video feed
+                processed_frame = results.render()[0]
+
+                # if cv2.waitKey(1) == ord('q'):
+                #     break
+
+    except cv2.error as e:
+        print(f"OpenCV error: {e}")
+    except KeyboardInterrupt:
+        print("Keyboard Interrupt detected. Exiting...")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+    finally:
+        # Release resources
+        # Replace this with your logic to update device status to 'Inactive'
+        updateStatus(userID, ip, "Inactive")
+        stream.release()
+        cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    # Your existing code to initialize Firebase, YOLOv5 model, and video capture stream
-    # Ensure these parts are integrated into the appropriate sections above
-
-    processed_frame = None
+    # Your existing code for initializing Firebase, YOLOv5 model, and video capture stream
 
     detection_thread = threading.Thread(target=real_time_detection)
     detection_thread.start()
