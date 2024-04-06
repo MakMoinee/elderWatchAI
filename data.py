@@ -3,18 +3,20 @@ import torch
 from devices import Devices
 import sys
 from datetime import datetime
+import requests
 
 import firebase_admin
 from firebase_admin import credentials, firestore, messaging
 
 username = 'briansia321@gmail.com'
 password = 'Dagolmanyak321'
-if len(sys.argv) < 3:
-    print("Please provide the IP address as a command-line argument.")
+if len(sys.argv) < 4:
+    print("Please provide the complete required paramaters [ip,userID,phoneNumber] as a command-line argument.")
     sys.exit(1)
 
 ip = sys.argv[1]
 userID = sys.argv[2]
+phoneNumber = sys.argv[3]
 rtsp_url = f"rtsp://{ip}/live/ch00_0"
 acceptable_confidence = 0.52
 
@@ -22,6 +24,12 @@ acceptable_confidence = 0.52
 cred = credentials.Certificate('./elderwatch.json')  # Replace with your service account key file
 firebase_admin.initialize_app(cred)
 db = firestore.client()
+
+key_ref = db.collection('keys')
+queryKey = key_ref.where(field_path='isActive',op_string='==',value=True)
+listOfKey = [doc.to_dict() for doc in queryKey.get()] 
+smsApiKey = listOfKey[0]['apiKey']
+
 token_ref = db.collection('tokens')
 queryToken = token_ref.where(field_path='userID', op_string='==', value=userID)
 listOfTokens = [doc.to_dict() for doc in queryToken.get()] 
@@ -34,6 +42,16 @@ message = messaging.Message(
     ),
     token=registration_token,
 )
+
+def send_sms(api_key, recipient_number, message):
+    url = "https://api.semaphore.co/api/v4/priority"
+    payload = {
+        "apikey": api_key,
+        "number": recipient_number,
+        "message": message
+    }
+    response = requests.post(url, data=payload)
+    return response.json()
 
 # Load YOLOv5 model
 def load_model(weights_path):
@@ -137,6 +155,7 @@ try:
                     print('Successfully sent message:', res)
                     im,s = save_image_with_boxes(frame,detections)
                     detectedCount = 0
+                    send_sms(smsApiKey,phoneNumber,"Patient Might Be In Danger, Please Review By Opening ElderWatch App")
                     save_activity_history(im)
         
         cv2.imshow('Real-time Detection', results.render()[0])
