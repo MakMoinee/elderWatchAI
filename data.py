@@ -85,8 +85,21 @@ def send_sms(api_key, recipient_number, message):
         "number": recipient_number,
         "message": message
     }
-    response = requests.post(url, data=payload)
-    return response.json()
+    try:
+        print(f"Sending SMS to {recipient_number}...")
+        response = requests.post(url, data=payload)
+        result = response.json()
+        print(f"SMS API Response: {result}")
+        
+        if response.status_code == 200:
+            print("SMS sent successfully!")
+        else:
+            print(f"SMS failed with status code: {response.status_code}")
+        
+        return result
+    except Exception as e:
+        print(f"ERROR sending SMS: {e}")
+        return {"error": str(e)}
 
 # Load YOLOv5 model
 def load_model(weights_path):
@@ -184,6 +197,7 @@ try:
                 print(f"Confidence: {detection['confidence']}, Name: {detection['name']}")
                 if "fall" in detection['name']:
                     detectedCount += 1
+                    print(f"Fall detected! Count: {detectedCount}/100")
                 if (detectedCount == 100):
                     print("Reached the desired detected count")
                     for tk in listOfTokens:
@@ -210,7 +224,11 @@ try:
                     
                     im,s = save_image_with_boxes(frame,detections)
                     detectedCount = 0
-                    send_sms(smsApiKey,phoneNumber,"Patient Might Be In Danger, Please Review By Opening ElderWatch App")
+                    
+                    # Send SMS notification
+                    sms_response = send_sms(smsApiKey, phoneNumber, "Patient Might Be In Danger, Please Review By Opening ElderWatch App")
+                    print(f"SMS Response: {sms_response}")
+                    
                     save_activity_history(im)
         
         cv2.imshow('Real-time Detection', results.render()[0])

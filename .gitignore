@@ -163,3 +163,5 @@ share/
 pyvenv.cfg
 pyvenv.*
 gallery/
+
+elderwatch.json
