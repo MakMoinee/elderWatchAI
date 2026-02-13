@@ -198,7 +198,7 @@ try:
                 if "fall" in detection['name']:
                     detectedCount += 1
                     print(f"Fall detected! Count: {detectedCount}/100")
-                if (detectedCount == 100):
+                if (detectedCount == 70):
                     print("Reached the desired detected count")
                     for tk in listOfTokens:
                         message = messaging.Message(
