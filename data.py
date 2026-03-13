@@ -235,7 +235,13 @@ try:
                     
                     save_activity_history(im)
         
-        cv2.imshow('Real-time Detection', results.render()[0])
+        display_frame = results.render()[0]
+        display_frame = cv2.resize(display_frame, (960, 540))
+        cv2.namedWindow('Real-time Detection', cv2.WINDOW_NORMAL)
+        cv2.resizeWindow('Real-time Detection', 960, 540)
+        screen_w, screen_h = 1920, 1080
+        cv2.moveWindow('Real-time Detection', (screen_w - 960) // 2, (screen_h - 540) // 2)
+        cv2.imshow('Real-time Detection', display_frame)
 
         if cv2.waitKey(1) == ord('q'):
             break
