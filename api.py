@@ -87,9 +87,15 @@ async def start_camera():
     result = await loop.run_in_executor(None, is_rtsp_accessible, rtsp_url)
 
     if result:
-        extra_args = f" {username} {password}" if (username and password) else ""
-        command =  f"start cmd /k \"cd /d C:\\Users\\Brian\\Documents\\elderWatchAI && activate && python data.py {ip} {userID} {phoneNumber}{extra_args}\""
-        subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        extra_args = [username, password] if (username and password) else []
+        command = ["python", "data.py", ip, userID, phoneNumber] + extra_args
+        subprocess.Popen(
+            command,
+            cwd="C:\\Users\\Brian\\Documents\\elderWatchAI",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
         ip_started[ip] = True
         return jsonify({"ip": ip, "status": "RTSP URL is accessible and working"}), 200
     else:
