@@ -75,7 +75,13 @@ async def start_camera():
     if not phoneNumber:
         return jsonify({"message": "phoneNumber is missing in the request parameters"}), 400
 
-    rtsp_url = f"rtsp://{ip}/live/ch00_0"
+    username = request.args.get('username')
+    password = request.args.get('password')
+
+    if username and password:
+        rtsp_url = f"rtsp://{username}:{password}@{ip}/stream1"
+    else:
+        rtsp_url = f"rtsp://{ip}/live/ch00_0"
 
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(None, is_rtsp_accessible, rtsp_url)
