@@ -1,3 +1,10 @@
+import logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logging.getLogger('torch').setLevel(logging.WARNING)
+logging.getLogger('yolov5').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('firebase_admin').setLevel(logging.WARNING)
+
 import cv2
 import torch
 from devices import Devices
