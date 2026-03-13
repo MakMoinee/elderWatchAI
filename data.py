@@ -10,8 +10,6 @@ from firebase_admin import credentials, firestore, messaging
 
 from flask import Flask, Response
 
-username = 'briansia321@gmail.com'
-password = 'Dagolmanyak321'
 if len(sys.argv) < 4:
     print("Please provide the complete required paramaters [ip,userID,phoneNumber] as a command-line argument.")
     sys.exit(1)
@@ -19,7 +17,13 @@ if len(sys.argv) < 4:
 ip = sys.argv[1]
 userID = sys.argv[2]
 phoneNumber = sys.argv[3]
-rtsp_url = f"rtsp://{ip}/live/ch00_0"
+username = sys.argv[4] if len(sys.argv) > 4 else None
+password = sys.argv[5] if len(sys.argv) > 5 else None
+
+if username and password:
+    rtsp_url = f"rtsp://{username}:{password}@{ip}/stream1"
+else:
+    rtsp_url = f"rtsp://{ip}/live/ch00_0"
 acceptable_confidence = 0.52
 
 # Initialize Firebase Admin SDK
