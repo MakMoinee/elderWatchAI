@@ -89,25 +89,30 @@ def manual_trigger():
     exit()
     
 
-def send_sms(api_key, recipient_number, message):
+def send_sms(api_key, recipient_number, message, sender_name="ElderWatch"):
     url = "https://api.semaphore.co/api/v4/priority"
     payload = {
         "apikey": api_key,
         "number": recipient_number,
-        "message": message
+        "message": message,
+        "sendername": sender_name
     }
     try:
         print(f"Sending SMS to {recipient_number}...")
         response = requests.post(url, data=payload)
-        result = response.json()
-        print(f"SMS API Response: {result}")
-        
+
         if response.status_code == 200:
-            print("SMS sent successfully!")
+            try:
+                result = response.json()
+                print(f"SMS API Response: {result}")
+                print("SMS sent successfully!")
+                return result
+            except Exception as json_err:
+                print(f"SMS sent but failed to parse response: {json_err}")
+                return {"raw": response.text}
         else:
-            print(f"SMS failed with status code: {response.status_code}")
-        
-        return result
+            print(f"SMS failed with status code: {response.status_code} — {response.text}")
+            return {"error": f"HTTP {response.status_code}", "details": response.text}
     except Exception as e:
         print(f"ERROR sending SMS: {e}")
         return {"error": str(e)}
