@@ -90,7 +90,7 @@ def manual_trigger():
     
 
 def send_sms(api_key, recipient_number, message, sender_name="ElderWatch"):
-    url = "https://api.semaphore.co/api/v4/priority"
+    url = "https://api.semaphore.co/api/v4/messages"
     payload = {
         "apikey": api_key,
         "number": recipient_number,
