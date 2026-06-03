@@ -31,7 +31,7 @@ if username and password:
     rtsp_url = f"rtsp://{username}:{password}@{ip}/stream1"
 else:
     rtsp_url = f"rtsp://{ip}/live/ch00_0"
-acceptable_confidence = 0.52
+acceptable_confidence = 0.9
 
 # Initialize Firebase Admin SDK
 cred = credentials.Certificate('./elderwatch.json')  # Replace with your service account key file
