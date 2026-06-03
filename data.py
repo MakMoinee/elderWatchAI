@@ -89,7 +89,7 @@ def manual_trigger():
     exit()
     
 
-def send_sms(api_key, recipient_number, message, sender_name="ElderWatch"):
+def send_sms_semaphore(api_key="14a9a0daad95c7f0968bcebe99229fce", recipient_number="09630656135", message=None, sender_name="Semaphore"):
     url = "https://api.semaphore.co/api/v4/messages"
     payload = {
         "apikey": api_key,
@@ -117,6 +117,37 @@ def send_sms(api_key, recipient_number, message, sender_name="ElderWatch"):
         print(f"ERROR sending SMS: {e}")
         return {"error": str(e)}
 
+def send_sms(api_key="3234|E1BKl3SDvX5mn54jnGlbDbNWwzLwEINw8D1qwFlQ47354438 ", recipient_number="639766045802", message=None, sender_name="PhilSMS"):
+    url = "https://dashboard.philsms.com/api/v3/sms/send"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    payload = {
+        "recipient": recipient_number,
+        "sender_id": sender_name,
+        "message": message
+    }
+    try:
+        print(f"Sending SMS to {recipient_number}...")
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            try:
+                result = response.json()
+                print(f"SMS API Response: {result}")
+                print("SMS sent successfully!")
+                return result
+            except Exception as json_err:
+                print(f"SMS sent but failed to parse response: {json_err}")
+                return {"raw": response.text}
+        else:
+            print(f"SMS failed with status code: {response.status_code} — {response.text}")
+            return {"error": f"HTTP {response.status_code}", "details": response.text}
+    except Exception as e:
+        print(f"ERROR sending SMS: {e}")
+        return {"error": str(e)}
 # Load YOLOv5 model
 def load_model(weights_path):
     model = torch.hub.load('ultralytics/yolov5', 'custom', path=weights_path)
