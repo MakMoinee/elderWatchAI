@@ -206,6 +206,15 @@ def save_image_with_boxes(frame, detections):
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         image_name = f"detected_{timestamp}.jpg"
         cv2.imwrite(f"./gallery/{image_name}", frame)
+        try:
+            with open(f"./gallery/{image_name}", 'rb') as img_file:
+                upload_response = requests.post(
+                    "https://elderwatchai.site/upload-image",
+                    files={"image": img_file}
+                )
+            print(f"Image upload response: {upload_response.status_code} — {upload_response.text}")
+        except Exception as upload_err:
+            print(f"Failed to upload image: {upload_err}")
         return image_name, detected_objects
 
     return None, None
