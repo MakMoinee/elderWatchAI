@@ -47,6 +47,11 @@ token_ref = db.collection('tokens')
 queryToken = token_ref.where(field_path='userID', op_string='==', value=userID)
 listOfTokens = [doc.to_dict() for doc in queryToken.get()] 
 
+patientGuardianRef = db.collection('patient_guardian')
+queryToken = patientGuardianRef.where(field_path='caregiverID', op_string='==', value=userID)
+listOfLinkPG = [doc.to_dict() for doc in queryToken.get()] 
+finalNumber = listOfLinkPG[0]['phoneNumber'] if len(listOfLinkPG) > 0 and 'phoneNumber' in listOfLinkPG[0] else phoneNumber
+
 registration_token = listOfTokens[0]['deviceToken']
 
 
@@ -287,7 +292,7 @@ try:
                     detectedCount = 0
                     
                     # Send SMS notification
-                    sms_response = send_sms(smsApiKey, phoneNumber, "Patient Might Be In Danger, Please Review By Opening ElderWatch App")
+                    sms_response = send_sms(smsApiKey, finalNumber, "Patient Might Be In Danger, Please Review By Opening ElderWatch App")
                     print(f"SMS Response: {sms_response}")
                     
                     save_activity_history(im)
